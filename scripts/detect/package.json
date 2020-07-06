@@ -1,0 +1,15 @@
+{
+  "name": "detect",
+  "description": "detect script for verifying registry issues",
+  "version": "0.1.0",
+  "dependencies": {
+    "toml": "^3.0.0"
+  },
+  "license": "Apache-2.0",
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ]
+}

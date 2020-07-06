@@ -1,0 +1,28 @@
+name: Register Buildpack
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Node Dependencies
+        working-directory: scripts/detect
+        shell: bash
+        run: npm install
+      - name: Detect and Validate Issue
+        uses: actions/github-script@v2
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
+          script: |
+            const path = require('path')
+            const scriptPath = path.resolve('scripts/detect/index.js')
+            console.log(require(scriptPath)({context}))
+#      - name: Get result
+#        run: echo "${{steps.test-results.outputs.result}}"
