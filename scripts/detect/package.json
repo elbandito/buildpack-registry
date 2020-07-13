@@ -1,6 +1,6 @@
 {
-  "name": "detect",
-  "description": "detect script for verifying registry issues",
+  "name": "TBD",
+  "description": "helper script for registering buildpacks",
   "version": "0.1.0",
   "dependencies": {
     "toml": "^3.0.0"

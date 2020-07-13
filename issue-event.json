@@ -5,6 +5,6 @@
         "owner": "elbandito",
         "repository_url": "https://api.github.com/repos/elbandito/buildpack-registry",
         "title": "ADD projectriff/node-function@0.6.2",
-        "body": "### Data\r\n\r\n```toml\r\nid = \"projectriff/node-function\"\r\nversion = \"0.6.2\"\r\naddr = \"gcr.io/projectriff/node-function@sha256:9d88250dfd77dbf5a535f1358c6a05dc2c0d3a22defbdcd72bb8f5e24b84e21d\"\r\n```"
+        "body": "### Data\r\n\r\nid = \"projectriff/node-function\"\r\nversion = \"0.6.2\"\r\naddr = \"gcr.io/projectriff/node-function@sha256:9d88250dfd77dbf5a535f1358c6a05dc2c0d3a22defbdcd72bb8f5e24b84e21d\"\r\n"
     }
 }
