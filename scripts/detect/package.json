@@ -1,9 +1,11 @@
 {
   "name": "TBD",
   "description": "helper script for registering buildpacks",
+  "repository": "TBD",
   "version": "0.1.0",
   "dependencies": {
-    "toml": "^3.0.0"
+    "toml": "^3.0.0",
+    "validate": "^5.1.0"
   },
   "license": "Apache-2.0",
   "licenses": [

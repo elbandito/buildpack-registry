@@ -8,7 +8,7 @@ jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      buildpack: ${{ steps.detect_validate.outputs.test }}
+      buildpack: ${{ steps.detect_validate.outputs.buildpack }}
     steps:
       - uses: actions/checkout@v2
       - name: Install Node Dependencies
@@ -24,11 +24,10 @@ jobs:
           result-encoding: string
           script: |
             const path = require('path')
-            const scriptsPath = path.resolve('scripts/detect/index.js')
-            const scripts = require(scriptsPath)
+            const scripts = require(path.resolve('scripts/detect/index.js'))
             const result = scripts.validateIssue({context})
 
-            console.log(`::set-output name=test::${JSON.stringify(result)}`)
+            console.log(`::set-output name=buildpack::${JSON.stringify(result)}`)
   authenticate:
     runs-on: ubuntu-latest
     needs: detect
