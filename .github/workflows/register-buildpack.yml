@@ -16,11 +16,9 @@ jobs:
         shell: bash
         run: |
           npm install
-      - name: Detect and Validate Issue
-        id: detect_validate
+      - id: detect_validate
+        name: Detect and Validate Issue
         uses: actions/github-script@v2
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
