@@ -30,10 +30,9 @@ function validateIssue({context}) {
         throw new Error("issue should contain ADD")
     }
 
-    const cleanBody = (context.payload.issue.body).replace(/\r?\n|\r/, "")
     let tomlData
     try {
-        tomlData = Toml.parse(cleanBody)
+        tomlData = Toml.parse(context.payload.issue.body)
     } catch (err) {
         throw new Error(`issue with TOML: ${err.message}`)
     }
