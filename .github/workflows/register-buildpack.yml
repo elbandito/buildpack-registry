@@ -30,7 +30,20 @@ jobs:
             console.log(`::set-output name=buildpack::${JSON.stringify(result)}`)
   authenticate:
     runs-on: ubuntu-latest
-    needs: detect
+#    needs: detect
     steps:
-    - name: Authenticate
-      run: echo ${{needs.detect.outputs.buildpack}}
+      - uses: actions/github-script@v2
+        name: Authenticate
+        env:
+          GITHUB_CONTEXT: ${{toJson(github)}}
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            console.log(process.env.BUILDPACK_OUTPUT)
+            github.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'test title',
+                body: '👋 Thanks for reporting!'
+            })
+#            echo ${{needs.detect.outputs.buildpack}}
