@@ -15,7 +15,6 @@ jobs:
         working-directory: scripts/validate
         shell: bash
         run: |
-          pwd
           npm install
       - id: detect_validate
         name: Validate Buildpack Registry Issue
@@ -40,7 +39,9 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const buildpackInfo = JSON.parse(${{needs.detect.outputs.buildpack}})
+            console.log('adsfadksljflkdsjfdsalk;fjdsaljfdsajflasdjf')
+            console.log(${{needs.validate.outputs.buildpack}})
+            const buildpackInfo = ${{ needs.validate.outputs.buildpack }}
             console.log(buildpackInfo)
             try {
                 const {data} = await github.repos.getContent({
