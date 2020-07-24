@@ -37,6 +37,7 @@ jobs:
         env:
           GITHUB_CONTEXT: ${{toJson(github)}}
         with:
+          github-token: ${{secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN}}
           script: |
             const buildpackInfo = ${{ needs.validate.outputs.buildpack }}
             try {
