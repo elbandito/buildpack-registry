@@ -35,20 +35,21 @@ jobs:
       - uses: actions/github-script@v2
         name: Retrieve Owners
         env:
-          GITHUB_CONTEXT: ${{toJson(github)}}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         with:
-          github-token: ${{secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN}}
+          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
             const buildpackInfo = ${{ needs.validate.outputs.buildpack }}
+            let registryOwners = ''
             try {
                 const {data} = await github.repos.getContents({
                     owner: 'elbandito',
                     path: `v1/${buildpackInfo.ns}.json`,
                     repo: 'buildpack-namespaces'
                 })
+                const buff = new Buffer.from(data.content, 'base64')
+                registryOwners = buff.toString('utf-8')
 
-                let buff = new Buffer.from(data.content, 'base64')
-                console.log(buff.toString('utf-8'))
             } catch (error) {
                 if (error.status && error.status === 404) {
                     console.log('Creating file since it does not exist')
@@ -61,6 +62,7 @@ jobs:
                         ]
                     };
                     const buff = Buffer.from(JSON.stringify(content), 'utf-8');
+                    registryOwners = buff.toString('utf-8')
 
                     await github.repos.createOrUpdateFile({
                         owner: 'elbandito',
@@ -82,3 +84,12 @@ jobs:
                   process.exit(1)
                 }
             }
+            console.log(`::set-env name=REGISTRY_OWNERS::${registryOwners}`)
+
+      - uses: actions/github-script@v2
+        name: Authenticate
+        with:
+          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          script: |
+            console.log(`frome authenticatae step ${process.env.REGISTRY_OWNERS}`)
+
