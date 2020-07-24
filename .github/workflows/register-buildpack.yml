@@ -93,7 +93,7 @@ jobs:
           script: |
             console.log(`from authenticatae step ${process.env.REGISTRY_OWNERS}`)
             const owners = JSON.parse(process.env.REGISTRY_OWNERS).owners
-            if (!!owners.find(owner => (owner.id === githubID) && (owner.type === 'github_user'))) {
+            if (!!owners.find(owner => (owner.id === context.payload.sender.id) && (owner.type === 'github_user'))) {
               console.log('user successfully authenticated via github_user')
               process.exit(0)
             }
