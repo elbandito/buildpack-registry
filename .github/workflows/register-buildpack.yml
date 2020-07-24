@@ -24,7 +24,7 @@ jobs:
           result-encoding: string
           script: |
             const path = require('path')
-            const scripts = require(path.resolve('scripts/validate/index.js'))
+            const scripts = require(path.resolve('./scripts/validate/index.js'))
             const result = scripts.validateIssue({context})
 
             console.log(`::set-output name=buildpack::${JSON.stringify(result)}`)
