@@ -42,47 +42,47 @@ jobs:
             const buildpackInfo = ${{ needs.validate.outputs.buildpack }}
             let registryOwners = ''
             try {
-                const {data} = await github.repos.getContents({
-                    owner: 'elbandito',
-                    path: `v1/${buildpackInfo.ns}.json`,
-                    repo: 'buildpack-namespaces'
-                })
-                const buff = new Buffer.from(data.content, 'base64')
-                registryOwners = buff.toString('utf-8')
+              const {data} = await github.repos.getContents({
+                owner: 'elbandito',
+                path: `v1/${buildpackInfo.ns}.json`,
+                repo: 'buildpack-namespaces'
+              })
+              const buff = new Buffer.from(data.content, 'base64')
+              registryOwners = buff.toString('utf-8')
 
             } catch (error) {
-                if (error.status && error.status === 404) {
-                    console.log('Creating file since it does not exist')
-                    const content = {
-                        owners: [
-                            {
-                                id: context.payload.sender.id,
-                                type: 'github_user'
-                            }
-                        ]
-                    };
-                    const buff = Buffer.from(JSON.stringify(content), 'utf-8');
-                    registryOwners = buff.toString('utf-8')
+              if (error.status && error.status === 404) {
+                console.log('Creating file since it does not exist')
+                const content = {
+                  owners: [
+                    {
+                      id: context.payload.sender.id,
+                      type: 'github_user'
+                    }
+                  ]
+                };
+                const buff = Buffer.from(JSON.stringify(content), 'utf-8');
+                registryOwners = buff.toString('utf-8')
 
-                    await github.repos.createOrUpdateFile({
-                        owner: 'elbandito',
-                        repo: 'buildpack-namespaces',
-                        path: `v1/${buildpackInfo.ns}.json`,
-                        message: 'initial commit',
-                        content: buff.toString('base64'),
-                        committer: {
-                            name: 'elbandito',
-                            email: 'longoria.public@gmail.com'
-                        },
-                        author: {
-                            name: 'elbandito',
-                            email: 'longoria.public@gmail.com'
-                        }
-                    })
-                } else {
-                  console.log(error)
-                  process.exit(1)
-                }
+                  await github.repos.createOrUpdateFile({
+                    owner: 'elbandito',
+                    repo: 'buildpack-namespaces',
+                    path: `v1/${buildpackInfo.ns}.json`,
+                    message: 'initial commit',
+                    content: buff.toString('base64'),
+                    committer: {
+                      name: 'elbandito',
+                      email: 'longoria.public@gmail.com'
+                    },
+                    author: {
+                      name: 'elbandito',
+                      email: 'longoria.public@gmail.com'
+                    }
+                  })
+              } else {
+                console.log(error)
+                process.exit(1)
+              }
             }
             console.log(`::set-env name=REGISTRY_OWNERS::${registryOwners}`)
 
@@ -91,5 +91,29 @@ jobs:
         with:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
-            console.log(`frome authenticatae step ${process.env.REGISTRY_OWNERS}`)
+            console.log(`from authenticatae step ${process.env.REGISTRY_OWNERS}`)
+            const owners = JSON.parse(process.env.REGISTRY_OWNERS).owners
+            if (!!owners.find(owner => (owner.id === githubID) && (owner.type === 'github_user'))) {
+              console.log('user successfully authenticated via github_user')
+              process.exit(0)
+            }
 
+            let orgIDs = [];
+            try {
+              const orgs = await github.orgs.listForUser({
+              username: context.payload.sender.login
+            });
+              orgIDs = orgs.data.map(org => org.id);
+
+            } catch (error) {
+              console.log(error);
+              process.exit(1);
+            }
+
+            const orgOwners = owners.filter(owner => (owner.type === 'github_org' && orgIDs.includes(owner.id)));
+            if (orgOwners.length > 0) {
+              console.log('user successfully authenticated via github_org')
+              process.exit(0)
+            }
+
+            process.exit(1)
