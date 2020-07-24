@@ -30,19 +30,15 @@ jobs:
             console.log(`::set-output name=buildpack::${JSON.stringify(result)}`)
   authenticate:
     runs-on: ubuntu-latest
-#    needs: validate
+    needs: validate
     steps:
       - uses: actions/github-script@v2
-#        name: Octokit Test
         name: Retrieve Owners
         env:
           GITHUB_CONTEXT: ${{toJson(github)}}
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            console.log(context)
-            console.log('=======================================')
-            console.log(github)
+            const buildpackInfo = ${{ needs.validate.outputs.buildpack }}
             try {
                 const {data} = await github.repos.getContents({
                     owner: 'elbandito',
@@ -58,12 +54,28 @@ jobs:
                     const content = {
                         owners: [
                             {
-                                id: context.sender.id,
+                                id: context.payload.sender.id,
                                 type: 'github_user'
                             }
                         ]
                     };
                     const buff = Buffer.from(JSON.stringify(content), 'utf-8');
+
+                    await github.repos.createOrUpdateFile({
+                        owner: 'elbandito',
+                        repo: 'buildpack-namespaces',
+                        path: `v1/${buildpackInfo.ns}.json`,
+                        message: 'initial commit',
+                        content: buff.toString('base64'),
+                        committer: {
+                            name: 'elbandito',
+                            email: 'longoria.public@gmail.com'
+                        },
+                        author: {
+                            name: 'elbandito',
+                            email: 'longoria.public@gmail.com'
+                        }
+                    })
                 } else {
                   console.log(error)
                   process.exit(1)
