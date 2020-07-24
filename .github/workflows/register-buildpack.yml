@@ -5,45 +5,55 @@ on:
     types: [opened]
 
 jobs:
-  detect:
+  validate:
     runs-on: ubuntu-latest
     outputs:
       buildpack: ${{ steps.detect_validate.outputs.buildpack }}
     steps:
       - uses: actions/checkout@v2
       - name: Install Node Dependencies
-        working-directory: scripts/detect
+        working-directory: scripts/validate
         shell: bash
         run: |
           npm install
       - id: detect_validate
-        name: Detect and Validate Issue
+        name: Validate Buildpack Registry Issue
         uses: actions/github-script@v2
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
           script: |
             const path = require('path')
-            const scripts = require(path.resolve('scripts/detect/index.js'))
+            const scripts = require(path.resolve('scripts/validate/index.js'))
             const result = scripts.validateIssue({context})
 
             console.log(`::set-output name=buildpack::${JSON.stringify(result)}`)
   authenticate:
     runs-on: ubuntu-latest
-#    needs: detect
+    needs: detect
     steps:
       - uses: actions/github-script@v2
-        name: Authenticate
+        name: Retrieve Owners
         env:
           GITHUB_CONTEXT: ${{toJson(github)}}
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            console.log(process.env.BUILDPACK_OUTPUT)
-            github.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: 'test title',
-                body: '👋 Thanks for reporting!'
-            })
-#            echo ${{needs.detect.outputs.buildpack}}
+            const buildpackInfo = JSON.parse(${{needs.detect.outputs.buildpack}})
+            console.log(buildpackInfo)
+            try {
+                const {data} = await github.repos.getContent({
+                    owner: 'elbandito',
+                    path: `v1/${buildpackInfo.ns}.json`,
+                    repo: 'buildpack-namespaces'
+                })
+
+                let buff = new Buffer.from(data.content, 'base64')
+                console.log(buff.toString('utf-8'))
+            } catch (error) {
+                if (error.status && error.status === 404) {
+                    console.log('File doesn not exist')
+                } else {
+                  console.log(error)
+                }
+            }

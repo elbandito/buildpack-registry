@@ -17,7 +17,7 @@ const bodySchema = new Schema({
     },
     addr: {
         type: String,
-        match: /[\w][\w.-]{0,127}/,
+        match: /[\w][\w.-]{0,127}/, // TODO: make this a stronger regex
         required: true
     },
 })
