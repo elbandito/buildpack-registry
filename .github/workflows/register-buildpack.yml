@@ -30,7 +30,7 @@ jobs:
             console.log(`::set-output name=buildpack::${JSON.stringify(result)}`)
   authenticate:
     runs-on: ubuntu-latest
-    needs: detect
+    needs: validate
     steps:
       - uses: actions/github-script@v2
         name: Retrieve Owners
