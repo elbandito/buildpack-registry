@@ -1,5 +1,5 @@
 {
-  "name": "validate registry buildpack",
+  "name": "validate",
   "description": "helper script for registering buildpacks",
   "repository": "TBD",
   "version": "0.1.0",
