@@ -160,7 +160,7 @@ jobs:
                   params = {...params, ...{sha}};
               }
               try {
-                await github.repos.createOrUpdateFileContent(params)
+                await github.repos.createOrUpdateFileContents(params)
               } catch (error) {
                 console.error(error)
                 process.exit(1)
