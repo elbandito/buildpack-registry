@@ -203,7 +203,7 @@ jobs:
                 }
               }
 
-      - uses: actions/github-scripts@v2
+      - uses: actions/github-script@v2
         name: Close Issue
         with:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
