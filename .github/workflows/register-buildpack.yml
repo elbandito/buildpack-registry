@@ -192,13 +192,25 @@ jobs:
               let fileContent = buff.toString('utf-8').trimEnd()
               fileContent = fileContent + "\n" + JSON.stringify(buildpackInfo)
 
-              await createOrUpdateFileContents(indexPath, `${context.payload.issue.title}`, toBase64(fileContent), data.sha)
+              await createOrUpdateFileContents(indexPath, context.payload.issue.title, toBase64(fileContent), data.sha)
 
               } catch (error) {
                 if (error.status && error.status === 404) {
-                  await createOrUpdateFileContents(indexPath, `${context.payload.issue.title}`, toBase64(JSON.stringify(buildpackInfo)))
+                  await createOrUpdateFileContents(indexPath, context.payload.issue.title, toBase64(JSON.stringify(buildpackInfo)))
                 } else {
                   console.error(error)
                   process.exit(1)
                 }
               }
+
+      - uses: actions/github-scripts@v2
+        name: Close Issue
+        with:
+          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          scripts: |
+            await github.issues.update({
+              owner: context.payload.issues.owner,
+              repo: 'buildpack-registry,
+              issue_number: context.payload.issues.issue_number,
+              state: 'closed'
+            })
