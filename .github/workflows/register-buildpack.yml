@@ -141,7 +141,7 @@ jobs:
             const createOrUpdateFileContents = async (path, message, content, sha = '') => {
               let params = {
                 owner: 'elbandito',
-                repo: 'index/buildpack-registry',
+                repo: 'buildpack-registry',
                 path,
                 message,
                 content,
@@ -165,6 +165,7 @@ jobs:
               }
             }
 
+            let indexPath = Path.join("index")
             if (nameLength === 1) {
                 indexPath = Path.join("1")
             } else if (nameLength === 2) {
