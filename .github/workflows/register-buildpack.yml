@@ -210,7 +210,7 @@ jobs:
           script: |
             await github.issues.update({
               owner: context.payload.issues.owner,
-              repo: 'buildpack-registry,
+              repo: 'buildpack-registry',
               issue_number: context.payload.issues.issue_number,
               state: 'closed'
             })
