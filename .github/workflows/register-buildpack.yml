@@ -209,8 +209,8 @@ jobs:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
             await github.issues.update({
-              owner: context.payload.issues.owner,
+              owner: context.payload.issue.owner,
               repo: 'buildpack-registry',
-              issue_number: context.payload.issues.issue_number,
+              issue_number: context.payload.issue.issue_number,
               state: 'closed'
             })
