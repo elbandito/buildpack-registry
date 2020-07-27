@@ -136,8 +136,35 @@ jobs:
             const nameLength = buildpackInfo.name.length
 
             const toBase64 = (value) => {
-                const buff = Buffer.from(value, 'utf-8');
-                return buff.toString('base64');
+              const buff = Buffer.from(value, 'utf-8');
+              return buff.toString('base64');
+            }
+
+            const createOrUpdateFileContents = async (path, message, content, sha = '') => {
+              let params = {
+                owner: 'elbandito',
+                repo: 'buildpack-namespaces',
+                path,
+                message,
+                content,
+                committer: {
+                    name: 'elbandito',
+                    email: 'longoria.public@gmail.com'
+                },
+                author: {
+                    name: 'elbandito',
+                    email: 'longoria.public@gmail.com'
+                }
+              }
+              if (sha !== '') {
+                  params = {...params, ...{sha}};
+              }
+              try {
+                await github.repos.createOrUpdateFileContent(params)
+              } catch (error) {
+                console.error(error)
+                process.exit(1)
+              }
             }
 
             if (nameLength === 1) {
@@ -155,7 +182,7 @@ jobs:
 
             indexPath = Path.join(indexPath, `${buildpackInfo.ns}_${buildpackInfo.name}`)
             try {
-              const {data} = await octokit.repos.getContent({
+              const {data} = await github.repos.getContents({
                 owner: 'elbandito',
                 path: indexPath,
                 repo: 'buildpack-registry'
