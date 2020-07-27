@@ -167,13 +167,13 @@ jobs:
 
             let indexPath = Path.join('index')
             if (nameLength === 1) {
-                indexPath = Path.join('1')
+                indexPath = Path.join(indexPath, '1')
             } else if (nameLength === 2) {
-                indexPath = Path.join('2')
+                indexPath = Path.join(indexPath, '2')
             } else if (nameLength === 3) {
-                indexPath = Path.join('3', buildpackInfo.name.slice(0, 2))
+                indexPath = Path.join(indexPath, '3', buildpackInfo.name.slice(0, 2))
             } else if (nameLength > 3) {
-                indexPath = Path.join(buildpackInfo.name.slice(0, 2), buildpackInfo.name.slice(2, 4))
+                indexPath = Path.join(indexPath, buildpackInfo.name.slice(0, 2), buildpackInfo.name.slice(2, 4))
             } else {
                 console.error(`buildpack name cannot be empty`)
                 process.exit(1)
