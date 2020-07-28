@@ -25,7 +25,13 @@ jobs:
           script: |
             const path = require('path')
             const scripts = require(path.resolve('./scripts/validate/index.js'))
-            const result = scripts.validateIssue({context})
+            let result
+            try {
+              result = scripts.validateIssue({context})
+            } catch (error) {
+              console.error(error)
+              process.exit(1)
+            }
 
             console.log(`::set-output name=buildpack::${JSON.stringify(result)}`)
   authenticate:
