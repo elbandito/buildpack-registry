@@ -13,12 +13,11 @@ const bodySchema = new Schema({
     },
     version: {
         type: String,
-        match: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
         required: true
     },
     addr: {
         type: String,
-        match: /[\w][\w.-]{0,127}/, // TODO: make this a stronger regex
+        match: /[\w][\w.-]{0,127}@sha256:[A-Fa-f0-9]{64}/, // TODO: make this a stronger regex
         required: true
     },
 })
