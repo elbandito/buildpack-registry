@@ -214,7 +214,7 @@ jobs:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
             await github.issues.update({
-              owner: context.payload.issue.user.login,
+              owner: 'elbandito',
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               state: 'closed'
