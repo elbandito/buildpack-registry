@@ -201,6 +201,25 @@ jobs:
         with:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
+            try {
+              await github.issues.createLabel({
+                owner: 'elbandito',
+                repo: 'buildpack-registry',
+                name: 'succeeded',
+                color: '008000'
+              });
+            } catch (error) {
+              if (!error.errors.find(err => err.code === 'already_exists')) {
+                console.error(error)
+                process.exit(1)
+              }
+            }
+            await github.issues.addLabels({
+              owner: 'elbandito',
+              repo: 'buildpack-registry',
+              issue_number: context.payload.issue.number,
+              labels: 'succeeded'
+            });
             await github.issues.update({
               owner: 'elbandito',
               repo: 'buildpack-registry',
@@ -214,4 +233,28 @@ jobs:
         with:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
-            console.log('dkdkdkdkdkdkdkdkdkdkdkdkdkdkdkdkdk')
+            try {
+              await github.issues.createLabel({
+                owner: 'elbandito',
+                repo: 'buildpack-registry',
+                name: 'failed',
+                color: 'FF0000'
+              });
+            } catch (error) {
+              if (!error.errors.find(err => err.code === 'already_exists')) {
+                console.error(error)
+                process.exit(1)
+              }
+            }
+            await github.issues.addLabels({
+              owner: 'elbandito',
+              repo: 'buildpack-registry',
+              issue_number: context.payload.issue.number,
+              labels: 'failed'
+            });
+            await github.issues.update({
+              owner: 'elbandito',
+              repo: 'buildpack-registry',
+              issue_number: context.payload.issue.number,
+              state: 'closed'
+            })
