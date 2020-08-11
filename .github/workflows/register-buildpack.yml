@@ -207,3 +207,11 @@ jobs:
               issue_number: context.payload.issue.number,
               state: 'closed'
             })
+
+      - uses: actions/github-script@v2
+        name: Clean-up
+        if: ${{ failure() }}
+        with:
+          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          script: |
+            console.log('dkdkdkdkdkdkdkdkdkdkdkdkdkdkdkdkdk')
