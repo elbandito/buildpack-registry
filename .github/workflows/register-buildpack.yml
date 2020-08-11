@@ -5,10 +5,8 @@ on:
     types: [opened]
 
 jobs:
-  validate:
+  register:
     runs-on: ubuntu-latest
-    outputs:
-      buildpack: ${{ steps.detect_validate.outputs.buildpack }}
     steps:
       - uses: actions/checkout@v2
       - name: Install Node Dependencies
@@ -17,7 +15,7 @@ jobs:
         run: |
           npm install
       - id: detect_validate
-        name: Validate Buildpack Registry Issue
+        name: Validate Buildpack Issue
         uses: actions/github-script@v2
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
@@ -32,12 +30,8 @@ jobs:
               console.error(error)
               process.exit(1)
             }
+            console.log(`::set-env name=BUILDPACK::${JSON.stringify(result)}`)
 
-            console.log(`::set-output name=buildpack::${JSON.stringify(result)}`)
-  authenticate:
-    runs-on: ubuntu-latest
-    needs: validate
-    steps:
       - uses: actions/github-script@v2
         name: Retrieve Owners
         env:
@@ -45,7 +39,7 @@ jobs:
         with:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
-            const buildpackInfo = ${{ needs.validate.outputs.buildpack }}
+            const buildpackInfo = JSON.parse(process.env.BUILDPACK)
             let registryOwners = ''
             try {
               const {data} = await github.repos.getContents({
@@ -124,19 +118,13 @@ jobs:
             console.error('user is NOT authorized to register buildpack')
             process.exit(1)
 
-  index:
-    runs-on: ubuntu-latest
-    needs:
-      - validate
-      - authenticate
-    steps:
       - uses: actions/github-script@v2
         name: Update Registry Index
         with:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
             const Path = require('path');
-            const buildpackInfo = ${{ needs.validate.outputs.buildpack }}
+            const buildpackInfo = JSON.parse(process.env.BUILDPACK)
             const nameLength = buildpackInfo.name.length
 
             const toBase64 = (value) => {
