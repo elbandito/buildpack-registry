@@ -44,7 +44,7 @@ jobs:
             const buildpackInfo = JSON.parse(process.env.BUILDPACK)
             let registryOwners = ''
             try {
-              const {data} = await github.repos.getContents({
+              const {data} = await github.repos.getContent({
                 owner: process.env.OWNER,
                 path: `v1/${buildpackInfo.ns}.json`,
                 repo: 'buildpack-namespaces'
