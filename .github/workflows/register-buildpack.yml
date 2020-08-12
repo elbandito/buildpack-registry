@@ -6,6 +6,8 @@ on:
 
 jobs:
   register:
+    env:
+      OWNER: elbandito
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +45,7 @@ jobs:
             let registryOwners = ''
             try {
               const {data} = await github.repos.getContents({
-                owner: 'elbandito',
+                owner: process.env.OWNER,
                 path: `v1/${buildpackInfo.ns}.json`,
                 repo: 'buildpack-namespaces'
               })
@@ -65,17 +67,17 @@ jobs:
                 registryOwners = buff.toString('utf-8')
 
                 await github.repos.createOrUpdateFile({
-                  owner: 'elbandito',
+                  owner: process.env.OWNER,
                   repo: 'buildpack-namespaces',
                   path: `v1/${buildpackInfo.ns}.json`,
                   message: 'initial commit',
                   content: buff.toString('base64'),
                   committer: {
-                    name: 'elbandito',
+                    name: process.env.OWNER,
                     email: 'longoria.public@gmail.com'
                   },
                   author: {
-                    name: 'elbandito',
+                    name: process.env.OWNER,
                     email: 'longoria.public@gmail.com'
                   }
                 })
@@ -134,17 +136,17 @@ jobs:
 
             const createOrUpdateFileContents = async (path, message, content, sha = '') => {
               let params = {
-                owner: 'elbandito',
+                owner: process.env.OWNER,
                 repo: 'buildpack-registry',
                 path,
                 message,
                 content,
                 committer: {
-                    name: 'elbandito',
+                    name: process.env.OWNER,
                     email: 'longoria.public@gmail.com'
                 },
                 author: {
-                    name: 'elbandito',
+                    name: process.env.OWNER,
                     email: 'longoria.public@gmail.com'
                 }
               }
@@ -176,7 +178,7 @@ jobs:
             indexPath = Path.join(indexPath, `${buildpackInfo.ns}_${buildpackInfo.name}`)
             try {
               const {data} = await github.repos.getContents({
-                owner: 'elbandito',
+                owner: process.env.OWNER,
                 path: indexPath,
                 repo: 'buildpack-registry'
               })
@@ -203,7 +205,7 @@ jobs:
           script: |
             try {
               await github.issues.createLabel({
-                owner: 'elbandito',
+                owner: process.env.OWNER,
                 repo: 'buildpack-registry',
                 name: 'succeeded',
                 color: '008000'
@@ -215,13 +217,13 @@ jobs:
               }
             }
             await github.issues.addLabels({
-              owner: 'elbandito',
+              owner: process.env.OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               labels: ['succeeded']
             });
             await github.issues.update({
-              owner: 'elbandito',
+              owner: process.env.OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               state: 'closed'
@@ -235,7 +237,7 @@ jobs:
           script: |
             try {
               await github.issues.createLabel({
-                owner: 'elbandito',
+                owner: process.env.OWNER,
                 repo: 'buildpack-registry',
                 name: 'failed',
                 color: 'FF0000'
@@ -247,13 +249,13 @@ jobs:
               }
             }
             await github.issues.addLabels({
-              owner: 'elbandito',
+              owner: process.env.OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               labels: ['failed']
             });
             await github.issues.update({
-              owner: 'elbandito',
+              owner: process.env.OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               state: 'closed'
