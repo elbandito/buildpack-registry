@@ -25,7 +25,7 @@ jobs:
           result-encoding: string
           script: |
             const path = require('path')
-            const scripts = require(path.resolve('./scripts/validate/index.js'))
+            const scripts = require(path.resolve('.github/workflows/scripts/validate/index.js'))
             let result
             try {
               result = scripts.validateIssue({context})
