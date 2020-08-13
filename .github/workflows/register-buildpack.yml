@@ -21,7 +21,6 @@ jobs:
         name: Validate Buildpack Issue
         uses: actions/github-script@v2
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
           script: |
             const path = require('path')
@@ -37,10 +36,8 @@ jobs:
 
       - uses: actions/github-script@v2
         name: Retrieve Owners
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
         with:
-          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             const buildpackInfo = JSON.parse(process.env.BUILDPACK)
             let registryOwners = ''
@@ -92,7 +89,7 @@ jobs:
       - uses: actions/github-script@v2
         name: Authenticate
         with:
-          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             const owners = JSON.parse(process.env.REGISTRY_OWNERS).owners
             if (!!owners.find(owner => (owner.id === context.payload.sender.id) && (owner.type === 'github_user'))) {
@@ -124,7 +121,7 @@ jobs:
       - uses: actions/github-script@v2
         name: Update Registry Index
         with:
-          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             const Path = require('path');
             const buildpackInfo = JSON.parse(process.env.BUILDPACK)
@@ -202,7 +199,7 @@ jobs:
       - uses: actions/github-script@v2
         name: Close Issue on Success
         with:
-          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             try {
               await github.issues.createLabel({
@@ -234,7 +231,7 @@ jobs:
         name: Close Issue on Failure
         if: ${{ failure() }}
         with:
-          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             try {
               await github.issues.createLabel({
