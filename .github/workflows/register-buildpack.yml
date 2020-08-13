@@ -200,22 +200,16 @@ jobs:
               }
 
       - uses: actions/github-script@v2
-        name: Close Issue
-        if: ${{ always() }}
-        env:
-          JOB_STATUS: ${{ failure() }}
+        name: Close Issue on Success
         with:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
-            const label = process.env.JOB_STATUS
-              ? {name: 'failed', color: 'FF0000'}
-              : {name: 'succeeded', color: '008000'}
             try {
               await github.issues.createLabel({
                 owner: process.env.GITHUB_OWNER,
                 repo: 'buildpack-registry',
-                name: label.name,
-                color: label.color
+                name: 'succeeded',
+                color: '008000'
               });
             } catch (error) {
               if (!error.errors.find(err => err.code === 'already_exists')) {
@@ -227,7 +221,39 @@ jobs:
               owner: process.env.GITHUB_OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
-              labels: [label.name]
+              labels: ['succeeded']
+            });
+            await github.issues.update({
+              owner: process.env.GITHUB_OWNER,
+              repo: 'buildpack-registry',
+              issue_number: context.payload.issue.number,
+              state: 'closed'
+            })
+
+      - uses: actions/github-script@v2
+        name: Close Issue on Failure
+        if: ${{ failure() }}
+        with:
+          github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
+          script: |
+            try {
+              await github.issues.createLabel({
+                owner: process.env.GITHUB_OWNER,
+                repo: 'buildpack-registry',
+                name: 'failed',
+                color: 'FF0000'
+              });
+            } catch (error) {
+              if (!error.errors.find(err => err.code === 'already_exists')) {
+                console.error(error)
+                process.exit(1)
+              }
+            }
+            await github.issues.addLabels({
+              owner: process.env.GITHUB_OWNER,
+              repo: 'buildpack-registry',
+              issue_number: context.payload.issue.number,
+              labels: ['failed']
             });
             await github.issues.update({
               owner: process.env.GITHUB_OWNER,
