@@ -7,7 +7,8 @@ on:
 jobs:
   register:
     env:
-      OWNER: elbandito
+      NAMESPACE_REPO: buildpack-namespaces
+      GITHUB_OWNER: elbandito
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -45,9 +46,9 @@ jobs:
             let registryOwners = ''
             try {
               const {data} = await github.repos.getContent({
-                owner: process.env.OWNER,
+                owner: process.env.GITHUB_OWNER,
                 path: `v1/${buildpackInfo.ns}.json`,
-                repo: 'buildpack-namespaces'
+                repo: process.env.NAMESPACE_REPO
               })
               const buff = new Buffer.from(data.content, 'base64')
               registryOwners = buff.toString('utf-8')
@@ -67,17 +68,17 @@ jobs:
                 registryOwners = buff.toString('utf-8')
 
                 await github.repos.createOrUpdateFile({
-                  owner: process.env.OWNER,
-                  repo: 'buildpack-namespaces',
+                  owner: process.env.GITHUB_OWNER,
+                  repo: process.env.NAMESPACE_REPO,
                   path: `v1/${buildpackInfo.ns}.json`,
                   message: 'initial commit',
                   content: buff.toString('base64'),
                   committer: {
-                    name: process.env.OWNER,
+                    name: process.env.GITHUB_OWNER,
                     email: 'longoria.public@gmail.com'
                   },
                   author: {
-                    name: process.env.OWNER,
+                    name: process.env.GITHUB_OWNER,
                     email: 'longoria.public@gmail.com'
                   }
                 })
@@ -136,17 +137,17 @@ jobs:
 
             const createOrUpdateFileContents = async (path, message, content, sha = '') => {
               let params = {
-                owner: process.env.OWNER,
+                owner: process.env.GITHUB_OWNER,
                 repo: 'buildpack-registry',
                 path,
                 message,
                 content,
                 committer: {
-                    name: process.env.OWNER,
+                    name: process.env.GITHUB_OWNER,
                     email: 'longoria.public@gmail.com'
                 },
                 author: {
-                    name: process.env.OWNER,
+                    name: process.env.GITHUB_OWNER,
                     email: 'longoria.public@gmail.com'
                 }
               }
@@ -178,7 +179,7 @@ jobs:
             indexPath = Path.join(indexPath, `${buildpackInfo.ns}_${buildpackInfo.name}`)
             try {
               const {data} = await github.repos.getContent({
-                owner: process.env.OWNER,
+                owner: process.env.GITHUB_OWNER,
                 path: indexPath,
                 repo: 'buildpack-registry'
               })
@@ -205,7 +206,7 @@ jobs:
           script: |
             try {
               await github.issues.createLabel({
-                owner: process.env.OWNER,
+                owner: process.env.GITHUB_OWNER,
                 repo: 'buildpack-registry',
                 name: 'succeeded',
                 color: '008000'
@@ -217,13 +218,13 @@ jobs:
               }
             }
             await github.issues.addLabels({
-              owner: process.env.OWNER,
+              owner: process.env.GITHUB_OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               labels: ['succeeded']
             });
             await github.issues.update({
-              owner: process.env.OWNER,
+              owner: process.env.GITHUB_OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               state: 'closed'
@@ -237,7 +238,7 @@ jobs:
           script: |
             try {
               await github.issues.createLabel({
-                owner: process.env.OWNER,
+                owner: process.env.GITHUB_OWNER,
                 repo: 'buildpack-registry',
                 name: 'failed',
                 color: 'FF0000'
@@ -249,13 +250,13 @@ jobs:
               }
             }
             await github.issues.addLabels({
-              owner: process.env.OWNER,
+              owner: process.env.GITHUB_OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               labels: ['failed']
             });
             await github.issues.update({
-              owner: process.env.OWNER,
+              owner: process.env.GITHUB_OWNER,
               repo: 'buildpack-registry',
               issue_number: context.payload.issue.number,
               state: 'closed'
