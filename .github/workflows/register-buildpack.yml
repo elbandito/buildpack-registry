@@ -202,10 +202,14 @@ jobs:
       - uses: actions/github-script@v2
         name: Close Issue
         if: ${{ always() }}
+        env:
+          JOB_STATUS: ${{ failure() }}
         with:
           github-token: ${{ secrets.BUILDPACK_REGISTRY_GITHUB_ACTION_TOKEN }}
           script: |
-            const label = ${{ failure() }} ? {name: 'failed', color: 'FF0000'} : {name: 'succeeded', color: '008000'}
+            const label = process.env.JOB_STATUS
+              ? {name: 'failed', color: 'FF0000'}
+              : {name: 'succeeded', color: '008000'}
             try {
               await github.issues.createLabel({
                 owner: process.env.GITHUB_OWNER,
