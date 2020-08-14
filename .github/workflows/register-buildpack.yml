@@ -7,13 +7,16 @@ on:
 jobs:
   register:
     env:
-      NAMESPACE_REPO: registry-namespaces
-      GITHUB_OWNER: elbandito
+      GH_REG_OWNER: elbandito
+      GH_REG_INDEX_REPO: buildpack-registry
+      GH_REG_NAMESPACE_REPO: registry-namespaces
+      SCRIPTS_PATH: .github/workflows/scripts/register_buildpack
+      VERSION: v1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install Node Dependencies
-        working-directory: .github/workflows/scripts/validate
+        working-directory: ${{env.SCRIPTS_PATH}}
         shell: bash
         run: |
           npm install
@@ -24,7 +27,7 @@ jobs:
           result-encoding: string
           script: |
             const path = require('path')
-            const scripts = require(path.resolve('.github/workflows/scripts/validate/index.js'))
+            const scripts = require(path.resolve(`${process.env.SCRIPTS_PATH}/index.js`))
             let result
             try {
               result = scripts.validateIssue({context})
@@ -40,14 +43,16 @@ jobs:
           github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             const path = require('path')
-            const scripts = require(path.resolve('.github/workflows/scripts/validate/index.js'))
+            const scripts = require(path.resolve(`${process.env.SCRIPTS_PATH}/index.js`))
             let registryOwners
-            console.log({context})
-            console.log({github})
-            console.log({env})
-            console.log(env)
             try {
-              registryOwners = await scripts.retriveOwners({context, github, env})
+              registryOwners = await scripts.retrieveOwners(
+                {github, context},
+                JSON.parse(process.env.BUILDPACK),
+                process.env.GH_REG_OWNER,
+                process.env.GH_REG_NAMESPACE_REPO,
+                process.env.VERSION
+              )
             } catch (error) {
               console.error(error)
               process.exit(1)
@@ -59,170 +64,84 @@ jobs:
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
           script: |
-            const owners = JSON.parse(process.env.REGISTRY_OWNERS).owners
-            if (!!owners.find(owner => (owner.id === context.payload.sender.id) && (owner.type === 'github_user'))) {
-              console.error('user successfully authenticated via github_user')
-              process.exit(0)
-            }
-
-            let orgIDs = [];
+            const path = require('path')
+            const scripts = require(path.resolve(`${process.env.SCRIPTS_PATH}/index.js`))
             try {
-              const orgs = await github.orgs.listForUser({
-                username: context.payload.sender.login
-              });
-              orgIDs = orgs.data.map(org => org.id);
-
+              const owners = JSON.parse(process.env.REGISTRY_OWNERS).owners
+              const authorized = await scripts.isAuthorized({github, context}, owners)
+              if (!authorized) {
+                console.error('user is NOT authorized to register buildpack')
+                process.exit(1)
+              }
             } catch (error) {
-              console.error(error);
-              process.exit(1);
+              console.error(error)
+              process.exit(1)
             }
-
-            const filteredOwners = owners.filter(owner => (owner.type === 'github_org' && orgIDs.includes(owner.id)));
-            if (filteredOwners.length > 0) {
-              console.error('user successfully authenticated via github_org')
-              process.exit(0)
-            }
-
-            console.error('user is NOT authorized to register buildpack')
-            process.exit(1)
 
       - uses: actions/github-script@v2
         name: Update Registry Index
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
           script: |
-            const Path = require('path');
-            const buildpackInfo = JSON.parse(process.env.BUILDPACK)
-            const nameLength = buildpackInfo.name.length
-
-            const toBase64 = (value) => {
-              const buff = Buffer.from(value, 'utf-8');
-              return buff.toString('base64');
-            }
-
-            const createOrUpdateFileContents = async (path, message, content, sha = '') => {
-              let params = {
-                owner: process.env.GITHUB_OWNER,
-                repo: 'buildpack-registry',
-                path,
-                message,
-                content,
-                committer: {
-                    name: process.env.GITHUB_OWNER,
-                    email: 'longoria.public@gmail.com'
-                },
-                author: {
-                    name: process.env.GITHUB_OWNER,
-                    email: 'longoria.public@gmail.com'
-                }
-              }
-              if (sha !== '') {
-                  params = {...params, ...{sha}};
-              }
-              try {
-                await github.repos.createOrUpdateFileContents(params)
-              } catch (error) {
-                console.error(error)
-                process.exit(1)
-              }
-            }
-
-            let indexPath = Path.join('index')
-            if (nameLength === 1) {
-                indexPath = Path.join(indexPath, '1')
-            } else if (nameLength === 2) {
-                indexPath = Path.join(indexPath, '2')
-            } else if (nameLength === 3) {
-                indexPath = Path.join(indexPath, '3', buildpackInfo.name.slice(0, 2))
-            } else if (nameLength > 3) {
-                indexPath = Path.join(indexPath, buildpackInfo.name.slice(0, 2), buildpackInfo.name.slice(2, 4))
-            } else {
-                console.error(`buildpack name cannot be empty`)
-                process.exit(1)
-            }
-
-            indexPath = Path.join(indexPath, `${buildpackInfo.ns}_${buildpackInfo.name}`)
+            const path = require('path')
+            const scripts = require(path.resolve(`${process.env.SCRIPTS_PATH}/index.js`))
+            let registryOwners
             try {
-              const {data} = await github.repos.getContent({
-                owner: process.env.GITHUB_OWNER,
-                path: indexPath,
-                repo: 'buildpack-registry'
-              })
-
-              let buff = new Buffer.from(data.content, 'base64')
-              let fileContent = buff.toString('utf-8').trimEnd()
-              fileContent = fileContent + "\n" + JSON.stringify(buildpackInfo)
-
-              await createOrUpdateFileContents(indexPath, context.payload.issue.title, toBase64(fileContent), data.sha)
-
-              } catch (error) {
-                if (error.status && error.status === 404) {
-                  await createOrUpdateFileContents(indexPath, context.payload.issue.title, toBase64(JSON.stringify(buildpackInfo)))
-                } else {
-                  console.error(error)
-                  process.exit(1)
-                }
-              }
+              await scripts.indexRegistryForBuildpack(
+                {github, context},
+                JSON.parse(process.env.BUILDPACK),
+                process.env.GH_REG_OWNER,
+                process.env.GH_REG_INDEX_REPO
+              )
+            } catch (error) {
+              console.error(error)
+              process.exit(1)
+            }
 
       - uses: actions/github-script@v2
         name: Close Issue on Success
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
           script: |
+            const path = require('path')
+            const scripts = require(path.resolve(`${process.env.SCRIPTS_PATH}/index.js`))
             try {
-              await github.issues.createLabel({
-                owner: process.env.GITHUB_OWNER,
-                repo: 'buildpack-registry',
-                name: 'succeeded',
-                color: '008000'
-              });
-            } catch (error) {
-              if (!error.errors.find(err => err.code === 'already_exists')) {
-                console.error(error)
-                process.exit(1)
-              }
+              await scripts.closeIssue(
+                {github, context},
+                process.env.GH_REG_OWNER,
+                process.env.GH_REG_INDEX_REPO,
+                ['succeeded'],
+              )
             }
-            await github.issues.addLabels({
-              owner: process.env.GITHUB_OWNER,
-              repo: 'buildpack-registry',
-              issue_number: context.payload.issue.number,
-              labels: ['succeeded']
-            });
-            await github.issues.update({
-              owner: process.env.GITHUB_OWNER,
-              repo: 'buildpack-registry',
-              issue_number: context.payload.issue.number,
-              state: 'closed'
-            })
+            catch (error) {
+              console.error(error)
+              process.exit(1)
+            }
 
       - uses: actions/github-script@v2
         name: Close Issue on Failure
+        env:
+          GH_ACTION_PATH: ${{ github.event }}
         if: ${{ failure() }}
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
           script: |
+            const path = require('path')
+            const scripts = require(path.resolve(`${process.env.SCRIPTS_PATH}/index.js`))
+            const comment = `
+            ${JSON.stringify(process.env.GH_ACTION_PATH)}
+            Failed to automatically register the buildpack. For more details, see here: <link to the failed job>
+            If you feel this was in error, please reopen the issue and tag @delivery-team (if that's the right team...)`
             try {
-              await github.issues.createLabel({
-                owner: process.env.GITHUB_OWNER,
-                repo: 'buildpack-registry',
-                name: 'failed',
-                color: 'FF0000'
-              });
-            } catch (error) {
-              if (!error.errors.find(err => err.code === 'already_exists')) {
-                console.error(error)
-                process.exit(1)
-              }
+              await scripts.closeIssue(
+                {github, context},
+                process.env.GH_REG_OWNER,
+                process.env.GH_REG_INDEX_REPO,
+                ['failed'],
+                comment
+              )
             }
-            await github.issues.addLabels({
-              owner: process.env.GITHUB_OWNER,
-              repo: 'buildpack-registry',
-              issue_number: context.payload.issue.number,
-              labels: ['failed']
-            });
-            await github.issues.update({
-              owner: process.env.GITHUB_OWNER,
-              repo: 'buildpack-registry',
-              issue_number: context.payload.issue.number,
-              state: 'closed'
-            })
+            catch (error) {
+              console.error(error)
+              process.exit(1)
+            }
