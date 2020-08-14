@@ -7,7 +7,7 @@ on:
 jobs:
   register:
     env:
-      NAMESPACE_REPO: buildpack-namespaces
+      NAMESPACE_REPO: registry-namespaces
       GITHUB_OWNER: elbandito
     runs-on: ubuntu-latest
     steps:
