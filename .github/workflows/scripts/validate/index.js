@@ -1,11 +1,6 @@
 const Schema = require('validate')
 const Toml = require('toml')
 
-const testIssue = `
-id = "projectriff/node-function"
-version = "0.6.2"
-addr = "gcr.io/projectriff/node-function@sha256:9d88250dfd77dbf5a535f1358c6a05dc2c0d3a22defbdcd72bb8f5e24b84e21d"
-`
 const bodySchema = new Schema({
     id: {
         type: String,
@@ -23,7 +18,7 @@ const bodySchema = new Schema({
     },
 })
 
-function validateIssue({context}) {
+function validateIssue(context) {
     if (context.payload.issue.title === "") {
         throw new Error("issue title is missing")
     }
@@ -52,6 +47,56 @@ function validateIssue({context}) {
     }
 }
 
+async function retriveOwners(context, github, env) {
+    const buildpackInfo = JSON.parse(env.BUILDPACK)
+    let registryOwners = ''
+    try {
+        const {data} = await github.repos.getContent({
+            owner: env.GITHUB_OWNER,
+            path: `v1/${buildpackInfo.ns}.json`,
+            repo: env.NAMESPACE_REPO
+        })
+        const buff = new Buffer.from(data.content, 'base64')
+        registryOwners = buff.toString('utf-8')
+
+    } catch (error) {
+        if (error.status && error.status === 404) {
+            console.error('Creating file since it does not exist')
+            const content = {
+                owners: [
+                    {
+                        id: context.payload.sender.id,
+                        type: 'github_user'
+                    }
+                ]
+            };
+            const buff = Buffer.from(JSON.stringify(content), 'utf-8');
+            registryOwners = buff.toString('utf-8')
+
+            await github.repos.createOrUpdateFile({
+                owner: env.GITHUB_OWNER,
+                repo: env.NAMESPACE_REPO,
+                path: `v1/${buildpackInfo.ns}.json`,
+                message: 'initial commit',
+                content: buff.toString('base64'),
+                committer: {
+                    name: env.GITHUB_OWNER,
+                    email: 'longoria.public@gmail.com'
+                },
+                author: {
+                    name: env.GITHUB_OWNER,
+                    email: 'longoria.public@gmail.com'
+                }
+            })
+        } else {
+            throw error
+        }
+    }
+
+    return registryOwners
+}
+
 module.exports = {
-    validateIssue
+    validateIssue,
+    retriveOwners
 }
