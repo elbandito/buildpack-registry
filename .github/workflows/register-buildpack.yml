@@ -43,7 +43,7 @@ jobs:
             const scripts = require(path.resolve('.github/workflows/scripts/validate/index.js'))
             let registryOwners
             try {
-              registryOwners = scripts.retriveOwners({context, github, env})
+              registryOwners = await scripts.retriveOwners({context, github, env})
             } catch (error) {
               console.error(error)
               process.exit(1)

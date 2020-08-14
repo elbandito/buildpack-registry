@@ -19,6 +19,7 @@ const bodySchema = new Schema({
 })
 
 function validateIssue(context) {
+    console.log(context)
     if (context.payload.issue.title === "") {
         throw new Error("issue title is missing")
     }
