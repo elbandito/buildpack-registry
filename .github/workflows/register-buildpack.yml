@@ -42,6 +42,10 @@ jobs:
             const path = require('path')
             const scripts = require(path.resolve('.github/workflows/scripts/validate/index.js'))
             let registryOwners
+            console.log({context})
+            console.log({github})
+            console.log({env})
+            console.log(env)
             try {
               registryOwners = await scripts.retriveOwners({context, github, env})
             } catch (error) {
