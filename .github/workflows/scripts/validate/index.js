@@ -18,8 +18,7 @@ const bodySchema = new Schema({
     },
 })
 
-function validateIssue(context) {
-    console.log(context)
+function validateIssue({context}) {
     if (context.payload.issue.title === "") {
         throw new Error("issue title is missing")
     }
@@ -48,7 +47,7 @@ function validateIssue(context) {
     }
 }
 
-async function retriveOwners(context, github, env) {
+async function retriveOwners({context}, github, env) {
     const buildpackInfo = JSON.parse(env.BUILDPACK)
     let registryOwners = ''
     try {
