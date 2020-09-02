@@ -121,18 +121,20 @@ jobs:
       - uses: actions/github-script@v2
         name: Close Issue on Failure
         env:
-          MY_CONTEXT: ${{ toJson(context) }}
+          GH_ACTION_RUN_ID: ${{ github.run_id }}
         if: ${{ failure() }}
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             const path = require('path')
             const scripts = require(path.resolve(`${process.env.SCRIPTS_PATH}/index.js`))
-            console.log(process.env.MY_CONTEXT)
-
+            const actionURL = `https://github.com/${process.env.GH_REG_OWNER}/${process.env.GH_REG_INDEX_REPO}/actions/runs/${process.env.GH_ACTION_RUN_ID}`
             const comment = `
-            Failed to automatically register the buildpack. For more details, see here: <link to the failed job>
-            If you feel this was in error, please reopen the issue and tag @delivery-team (if that's the right team...)`
+            🔴 Failed to automatically register the buildpack. For more details, see [here](${actionURL})
+
+            🔃 If you feel this was in error, you may try again by creating a new issue.
+
+            📬 If the problem persists or need assistance, you may comment on this issue or contact the maintainers via email at \`cncf-buildpacks-maintainers@lists.cncf.io\``
             try {
               await scripts.closeIssue(
                 {github, context},

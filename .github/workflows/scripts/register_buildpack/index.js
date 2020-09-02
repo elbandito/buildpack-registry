@@ -6,17 +6,20 @@ const bodySchema = new Schema({
     id: {
         type: String,
         required: true,
+        message: 'invalid id'
     },
     version: {
         type: String,
         // regex from semver official website to validate versions
         match: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
-        required: true
+        required: true,
+        message: 'invalid semver'
     },
     addr: {
         type: String,
-        match: /[\w][\w.-]{0,127}@sha256:[A-Fa-f0-9]{64}/,
-        required: true
+        match: /(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9](?::[0-9]+)?\/[^:]+@sha256:[A-Fa-f0-9]{64}/,
+        required: true,
+        message: 'invalid addr'
     },
 })
 
@@ -68,7 +71,7 @@ function validateIssue({context}) {
 
     const errors = bodySchema.validate(tomlData)
     if (errors && errors.length > 0) {
-        throw new Error(`invalid issue body: ${errors}`)
+        throw new Error(`${errors}`)
     }
 
     return {
@@ -105,7 +108,7 @@ async function retrieveOwners({github, context}, buildpackInfo, owner, repo, ver
             const buff = Buffer.from(JSON.stringify(content), 'utf-8');
             registryOwners = buff.toString('utf-8')
 
-            await github.repos.createOrUpdateFile({
+            await github.repos.createOrUpdateFileContents({
                 owner,
                 repo,
                 path: `${version}/${buildpackInfo.ns}.json`,
@@ -167,7 +170,7 @@ async function indexRegistryForBuildpack({github, context}, buildpackInfo, owner
     } else if (nameLength > 3) {
         indexPath = Path.join(indexPath, buildpackInfo.name.slice(0, 2), buildpackInfo.name.slice(2, 4))
     } else {
-        throw new Error(`buildpack name cannot be empty`)
+        throw new Error('buildpack name cannot be empty')
     }
 
     indexPath = Path.join(indexPath, `${buildpackInfo.ns}_${buildpackInfo.name}`)
@@ -208,13 +211,15 @@ async function indexRegistryForBuildpack({github, context}, buildpackInfo, owner
     }
 }
 
-async function closeIssue({github, context}, owner, repo, labels, comment) {
-    await github.issues.createComment({
-        owner,
-        repo,
-        issue_number: context.payload.issue.number,
-        body: comment,
-    });
+async function closeIssue({github, context}, owner, repo, labels, comment = '') {
+    if (comment.trim() !== '') {
+        await github.issues.createComment({
+            owner,
+            repo,
+            issue_number: context.payload.issue.number,
+            body: comment,
+        });
+    }
     await github.issues.update({
         owner,
         repo,
