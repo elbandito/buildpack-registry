@@ -121,7 +121,7 @@ jobs:
       - uses: actions/github-script@v2
         name: Close Issue on Failure
         env:
-          GH_ACTION_PATH: ${{ github.action_path }}
+          GH_ACTION_PATH: ${{ JSON.stringify(github) }}
         if: ${{ failure() }}
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
