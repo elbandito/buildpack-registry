@@ -121,13 +121,15 @@ jobs:
       - uses: actions/github-script@v2
         name: Close Issue on Failure
         env:
-          GH_ACTION_PATH: ${{ toJson(github) }}
+          MY_CONTEXT: ${{ toJson(context) }}
         if: ${{ failure() }}
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             const path = require('path')
             const scripts = require(path.resolve(`${process.env.SCRIPTS_PATH}/index.js`))
+            console.log(process.env.MY_CONTEXT)
+
             const comment = `
             Failed to automatically register the buildpack. For more details, see here: <link to the failed job>
             If you feel this was in error, please reopen the issue and tag @delivery-team (if that's the right team...)`
